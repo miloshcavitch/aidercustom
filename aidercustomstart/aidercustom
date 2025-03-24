@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# Set the name for the virtual environment and path to Aider source
+AIDER_DIR="$HOME/aidercustom"  # Change this to your actual Aider source code path
+VENV_DIR="$AIDER_DIR/venv"
+
+# Store the current directory
+CURRENT_DIR="$(pwd)"
+
+# First navigate to the Aider directory to set up/activate the venv
+cd "$AIDER_DIR" || {
+    echo "Error: Could not find Aider directory at $AIDER_DIR"
+    echo "Please update the AIDER_DIR variable in this script to point to your Aider source code location"
+    exit 1
+}
+
+# Check if virtual environment exists
+if [ ! -d "$VENV_DIR" ]; then
+    echo "Creating virtual environment..."
+    python3 -m venv "$VENV_DIR" || {
+        echo "Failed to create virtual environment. Make sure python3-venv is installed."
+        exit 1
+    }
+    
+    # Activate the virtual environment
+    source "$VENV_DIR/bin/activate" || {
+        echo "Failed to activate virtual environment."
+        exit 1
+    }
+    
+    # Install requirements
+    echo "Installing requirements from requirements.txt..."
+    python -m pip install -r requirements.txt || {
+        echo "Failed to install requirements."
+        exit 1
+    }
+    
+    # Install Aider in development mode
+    echo "Installing Aider in development mode..."
+    python -m pip install -e . || {
+        echo "Failed to install Aider in development mode."
+        exit 1
+    }
+    
+    echo "Setup complete!"
+else
+    # Activate the virtual environment
+    source "$VENV_DIR/bin/activate" || {
+        echo "Failed to activate virtual environment."
+        exit 1
+    }
+fi
+
+# Go back to the original directory
+cd "$CURRENT_DIR" || {
+    echo "Failed to return to original directory."
+    exit 1
+}
+
+# Run the custom Aider in the current directory
+echo "Starting custom Aider in $(pwd)..."
+python -m aider "$@"
+
+# Deactivate virtual environment when done
+deactivate
